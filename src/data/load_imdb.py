@@ -24,9 +24,9 @@ def load_imdb(path, sentiment_category):
         output = pd.concat([output, df], axis=0)
 
     if sentiment_category=='pos':
-        output['Label'] = 1
+        output['Label'] = 'positive'
     elif sentiment_category=='neg':
-        output['Label'] = 0
+        output['Label'] = 'negative'
     return output
 
 pos_train = load_imdb(pos_data, 'pos')
@@ -34,4 +34,4 @@ neg_train = load_imdb(neg_data, 'neg')
 
 train = pd.concat([pos_train, neg_train], axis=0)
 
-output.to_csv(path + 'testing.csv', index=False)
+train.to_csv(path + '\IMDB.csv', sep='\t', index=False)

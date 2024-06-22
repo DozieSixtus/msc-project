@@ -8,7 +8,7 @@ from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer, HashingVectorizer
 from tqdm import tqdm
-from sklearn.metrics import accuracy_score,precision_score,recall_score,confusion_matrix,roc_curve,classification_report,f1_score
+from sklearn.metrics import *
 from scikitplot.metrics import plot_confusion_matrix
 
 dataset = pd.read_csv(r".\data\amazon_electronics_review.csv", sep='\t', index_col=[0])
@@ -16,7 +16,7 @@ dataset.sample(frac=1).head(5) # shuffle the df and pick first 5
 dataset = dataset.iloc[:34000]
 dataset['Label'] = dataset['overall'].apply(lambda x: 'negative' if x<3 else ('neutral' if x==3 else 'positive'))
 
-train, test = train_test_split(dataset, test_size=0.2)
+train, test = train_test_split(dataset, test_size=0.2, random_state=200)
 
 # Create feature vectors
 # TFIDF vectorizer
@@ -43,7 +43,7 @@ time_linear_train = t1-t0
 time_linear_predict = t2-t1
 # results
 print("Training time: %fs; Prediction time: %fs" % (time_linear_train, time_linear_predict))
-report = classification_report(test['Label'], prediction_linear, output_dict=True)
+report = classification_report(test['Label'], prediction_linear)
 
 review = """SUPERB, I AM IN LOVE IN THIS PHONE"""
 review_vector = vectorizer.transform([review]) # vectorizing
@@ -68,7 +68,7 @@ print('Precision_score: ',pre_score)
 print('Recall_score: ',rec_score)
 print('F1 score', f1score)
 print("-"*50)
-cr = classification_report(prediction_linear,test['Label'])
+cr = classification_report(test['Label'], prediction_linear)
 print(cr)
 
 # Count vectorizer
@@ -93,7 +93,7 @@ time_linear_train = t1-t0
 time_linear_predict = t2-t1
 # results
 print("Training time: %fs; Prediction time: %fs" % (time_linear_train, time_linear_predict))
-report = classification_report(test['Label'], prediction_linear, output_dict=True)
+report = classification_report(test['Label'], prediction_linear)
 
 review = """SUPERB, I AM IN LOVE IN THIS PHONE"""
 review_vector = vectorizer.transform([review]) # vectorizing
@@ -118,7 +118,7 @@ print('Precision_score: ',pre_score)
 print('Recall_score: ',rec_score)
 print('F1 score', f1score)
 print("-"*50)
-cr = classification_report(prediction_linear,test['Label'])
+cr = classification_report(test['Label'], prediction_linear)
 print(cr)
 
 # Hashing vectorizer
@@ -142,7 +142,7 @@ time_linear_train = t1-t0
 time_linear_predict = t2-t1
 # results
 print("Training time: %fs; Prediction time: %fs" % (time_linear_train, time_linear_predict))
-report = classification_report(test['Label'], prediction_linear, output_dict=True)
+report = classification_report(test['Label'], prediction_linear)
 
 review = """SUPERB, I AM IN LOVE IN THIS PHONE"""
 review_vector = vectorizer.transform([review]) # vectorizing
@@ -167,5 +167,5 @@ print('Precision_score: ',pre_score)
 print('Recall_score: ',rec_score)
 print('F1 score', f1score)
 print("-"*50)
-cr = classification_report(prediction_linear,test['Label'])
+cr = classification_report(test['Label'], prediction_linear)
 print(cr)
