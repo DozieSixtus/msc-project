@@ -1,7 +1,9 @@
 import time
+import re
 
 import pandas as pd
 import numpy as np
+import nltk
 
 from sklearn import svm
 from sklearn.metrics import classification_report
@@ -10,11 +12,32 @@ from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer, Ha
 from tqdm import tqdm
 from sklearn.metrics import *
 from scikitplot.metrics import plot_confusion_matrix
+from nltk.stem import PorterStemmer
+from nltk.corpus import stopwords
+
+nltk.download('stopwords')
+stop_words = set(stopwords.words("english"))
+stemmer = PorterStemmer()
+
+def deEmojify(text):
+    regrex_pattern = re.compile(pattern = "["
+        u"\U0001F600-\U0001F64F"  # emoticons
+        u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+        u"\U0001F680-\U0001F6FF"  # transport & map symbols
+        u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+                           "]+", flags = re.UNICODE)
+    return regrex_pattern.sub(r'',text)
+
+dataset = pd.read_csv(r".\data\IMDB.csv", sep='\t')
+dataset['Reviews'] = dataset['Reviews'].apply(lambda x: ' '.join([word for word in x.split() if word not in stop_words]))
+dataset['Reviews'] = dataset['Reviews'].apply(lambda x: deEmojify(x))
+dataset['Reviews'] = dataset['Reviews'].apply(lambda x: ' '.join([stemmer.stem(word) for word in x.split()]))
+
 
 dataset = pd.read_csv(r".\data\amazon_electronics_review.csv", sep='\t', index_col=[0])
 dataset.sample(frac=1).head(5) # shuffle the df and pick first 5
 dataset = dataset.iloc[:34000]
-dataset['Label'] = dataset['overall'].apply(lambda x: 'negative' if x<3 else ('neutral' if x==3 else 'positive'))
+dataset['Label'] = dataset['overall'].apply(lambda x: 'negative' if x<=3 else 'positive')
 
 train, test = train_test_split(dataset, test_size=0.2, random_state=200)
 
@@ -43,7 +66,7 @@ time_linear_train = t1-t0
 time_linear_predict = t2-t1
 # results
 print("Training time: %fs; Prediction time: %fs" % (time_linear_train, time_linear_predict))
-report = classification_report(test['Label'], prediction_linear)
+report = classification_report(test['Label'], prediction_linear, digits=4)
 
 review = """SUPERB, I AM IN LOVE IN THIS PHONE"""
 review_vector = vectorizer.transform([review]) # vectorizing
@@ -60,15 +83,15 @@ print(classifier_linear.predict(review_vector))
 #rcParams['figure.figsize'] = 10,5
 plot_confusion_matrix(prediction_linear,test['Label'])
 acc_score = accuracy_score(prediction_linear,test['Label'])
-pre_score = precision_score(prediction_linear,test['Label'], average=None)
-rec_score = recall_score(prediction_linear,test['Label'],average=None)
-f1score = f1_score(prediction_linear,test['Label'],average=None)
+pre_score = precision_score(prediction_linear,test['Label'], average='macro')
+rec_score = recall_score(prediction_linear,test['Label'],average='macro')
+f1score = f1_score(prediction_linear,test['Label'],average='macro')
 print('Accuracy_score: ',acc_score)
 print('Precision_score: ',pre_score)
 print('Recall_score: ',rec_score)
 print('F1 score', f1score)
 print("-"*50)
-cr = classification_report(test['Label'], prediction_linear)
+cr = classification_report(test['Label'], prediction_linear, digits=4)
 print(cr)
 
 # Count vectorizer
@@ -93,7 +116,7 @@ time_linear_train = t1-t0
 time_linear_predict = t2-t1
 # results
 print("Training time: %fs; Prediction time: %fs" % (time_linear_train, time_linear_predict))
-report = classification_report(test['Label'], prediction_linear)
+report = classification_report(test['Label'], prediction_linear, digits=4)
 
 review = """SUPERB, I AM IN LOVE IN THIS PHONE"""
 review_vector = vectorizer.transform([review]) # vectorizing
@@ -110,15 +133,15 @@ print(classifier_linear.predict(review_vector))
 #rcParams['figure.figsize'] = 10,5
 plot_confusion_matrix(prediction_linear,test['Label'])
 acc_score = accuracy_score(prediction_linear,test['Label'])
-pre_score = precision_score(prediction_linear,test['Label'], average=None)
-rec_score = recall_score(prediction_linear,test['Label'],average=None)
-f1score = f1_score(prediction_linear,test['Label'],average=None)
+pre_score = precision_score(prediction_linear,test['Label'], average='macro')
+rec_score = recall_score(prediction_linear,test['Label'],average='macro')
+f1score = f1_score(prediction_linear,test['Label'],average='macro')
 print('Accuracy_score: ',acc_score)
 print('Precision_score: ',pre_score)
 print('Recall_score: ',rec_score)
 print('F1 score', f1score)
 print("-"*50)
-cr = classification_report(test['Label'], prediction_linear)
+cr = classification_report(test['Label'], prediction_linear, digits=4)
 print(cr)
 
 # Hashing vectorizer
@@ -142,7 +165,7 @@ time_linear_train = t1-t0
 time_linear_predict = t2-t1
 # results
 print("Training time: %fs; Prediction time: %fs" % (time_linear_train, time_linear_predict))
-report = classification_report(test['Label'], prediction_linear)
+report = classification_report(test['Label'], prediction_linear, digits=4)
 
 review = """SUPERB, I AM IN LOVE IN THIS PHONE"""
 review_vector = vectorizer.transform([review]) # vectorizing
@@ -159,13 +182,13 @@ print(classifier_linear.predict(review_vector))
 #rcParams['figure.figsize'] = 10,5
 plot_confusion_matrix(prediction_linear,test['Label'])
 acc_score = accuracy_score(prediction_linear,test['Label'])
-pre_score = precision_score(prediction_linear,test['Label'], average=None)
-rec_score = recall_score(prediction_linear,test['Label'],average=None)
-f1score = f1_score(prediction_linear,test['Label'],average=None)
+pre_score = precision_score(prediction_linear,test['Label'], average='macro')
+rec_score = recall_score(prediction_linear,test['Label'],average='macro')
+f1score = f1_score(prediction_linear,test['Label'],average='macro')
 print('Accuracy_score: ',acc_score)
 print('Precision_score: ',pre_score)
 print('Recall_score: ',rec_score)
 print('F1 score', f1score)
 print("-"*50)
-cr = classification_report(test['Label'], prediction_linear)
+cr = classification_report(test['Label'], prediction_linear, digits=4)
 print(cr)
