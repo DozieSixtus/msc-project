@@ -93,18 +93,6 @@ time_linear_predict = t2-t1
 print("Training time: %fs; Prediction time: %fs" % (time_linear_train, time_linear_predict))
 report = classification_report(test['Label'], prediction_linear, digits=4)
 
-review = """SUPERB, I AM IN LOVE IN THIS PHONE"""
-review_vector = vectorizer.transform([review]) # vectorizing
-print(classifier_linear.predict(review_vector))
-
-review = """Do not purchase this product. My cell phone blast when I switched the charger"""
-review_vector = vectorizer.transform([review]) # vectorizing
-print(classifier_linear.predict(review_vector))
-
-review = """This product doesn't work correctly"""
-review_vector = vectorizer.transform([review]) # vectorizing
-print(classifier_linear.predict(review_vector))
-
 #rcParams['figure.figsize'] = 10,5
 plot_confusion_matrix(prediction_linear,test['Label'])
 acc_score = accuracy_score(prediction_linear,test['Label'])
@@ -173,18 +161,6 @@ time_linear_predict = t2-t1
 print("Training time: %fs; Prediction time: %fs" % (time_linear_train, time_linear_predict))
 report = classification_report(test['Label'], prediction_linear, digits=4)
 
-review = """SUPERB, I AM IN LOVE IN THIS PHONE"""
-review_vector = vectorizer.transform([review]) # vectorizing
-print(classifier_linear.predict(review_vector))
-
-review = """Do not purchase this product. My cell phone blast when I switched the charger"""
-review_vector = vectorizer.transform([review]) # vectorizing
-print(classifier_linear.predict(review_vector))
-
-review = """This product doesn't work correctly"""
-review_vector = vectorizer.transform([review]) # vectorizing
-print(classifier_linear.predict(review_vector))
-
 #rcParams['figure.figsize'] = 10,5
 plot_confusion_matrix(prediction_linear,test['Label'])
 acc_score = accuracy_score(prediction_linear,test['Label'])
@@ -251,18 +227,6 @@ time_linear_predict = t2-t1
 # results
 print("Training time: %fs; Prediction time: %fs" % (time_linear_train, time_linear_predict))
 report = classification_report(test['Label'], prediction_linear, digits=4)
-
-review = """SUPERB, I AM IN LOVE IN THIS PHONE"""
-review_vector = vectorizer.transform([review]) # vectorizing
-print(classifier_linear.predict(review_vector))
-
-review = """Do not purchase this product. My cell phone blast when I switched the charger"""
-review_vector = vectorizer.transform([review]) # vectorizing
-print(classifier_linear.predict(review_vector))
-
-review = """This product doesn't work correctly"""
-review_vector = vectorizer.transform([review]) # vectorizing
-print(classifier_linear.predict(review_vector))
 
 #rcParams['figure.figsize'] = 10,5
 plot_confusion_matrix(prediction_linear,test['Label'])

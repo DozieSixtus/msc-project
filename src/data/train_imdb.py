@@ -19,6 +19,7 @@ from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from keras import layers
 from keras import models
+from keras.utils import plot_model
 
 print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 nltk.download('stopwords')
@@ -39,7 +40,7 @@ dataset['Reviews'] = dataset['Reviews'].apply(lambda x: ' '.join([word for word 
 dataset['Reviews'] = dataset['Reviews'].apply(lambda x: deEmojify(x))
 dataset['Reviews'] = dataset['Reviews'].apply(lambda x: ' '.join([stemmer.stem(word) for word in x.split()]))
 
-#dataset = dataset.sample(500, random_state=200)
+dataset = dataset.sample(500, random_state=200)
 train, test = train_test_split(dataset, test_size=0.2, random_state=200)
 nn_label = train['Label'].map({'positive': 1, 'negative':0})
 nn_label = tf.cast(nn_label, tf.float32)
@@ -88,18 +89,6 @@ time_linear_predict = t2-t1
 print("Training time: %fs; Prediction time: %fs" % (time_linear_train, time_linear_predict))
 report = classification_report(test['Label'], prediction_linear, digits=4)
 
-review = """SUPERB, I AM IN LOVE IN THIS PHONE"""
-review_vector = vectorizer.transform([review]) # vectorizing
-print(classifier_linear.predict(review_vector))
-
-review = """Do not purchase this product. My cell phone blast when I switched the charger"""
-review_vector = vectorizer.transform([review]) # vectorizing
-print(classifier_linear.predict(review_vector))
-
-review = """This product doesn't work correctly"""
-review_vector = vectorizer.transform([review]) # vectorizing
-print(classifier_linear.predict(review_vector))
-
 #rcParams['figure.figsize'] = 10,5
 plot_confusion_matrix(prediction_linear,test['Label'])
 acc_score = accuracy_score(prediction_linear,test['Label'])
@@ -125,7 +114,7 @@ model.add(layers.Dense(units= 1, kernel_initializer ='glorot_uniform', activatio
 model.compile(loss='binary_crossentropy',
               optimizer='adamax',
               metrics=['acc',f1_m,precision_m, recall_m])
-
+plot_model(model, to_file='model_plot.png', show_shapes=True, show_layer_names=True)
 es = keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=3, 
                                    verbose=0, mode='min', start_from_epoch=3, restore_best_weights=True)
 
@@ -167,18 +156,6 @@ time_linear_predict = t2-t1
 # results
 print("Training time: %fs; Prediction time: %fs" % (time_linear_train, time_linear_predict))
 report = classification_report(test['Label'], prediction_linear, digits=4)
-
-review = """SUPERB, I AM IN LOVE IN THIS PHONE"""
-review_vector = vectorizer.transform([review]) # vectorizing
-print(classifier_linear.predict(review_vector))
-
-review = """Do not purchase this product. My cell phone blast when I switched the charger"""
-review_vector = vectorizer.transform([review]) # vectorizing
-print(classifier_linear.predict(review_vector))
-
-review = """This product doesn't work correctly"""
-review_vector = vectorizer.transform([review]) # vectorizing
-print(classifier_linear.predict(review_vector))
 
 #rcParams['figure.figsize'] = 10,5
 plot_confusion_matrix(prediction_linear,test['Label'])
@@ -246,18 +223,6 @@ time_linear_predict = t2-t1
 # results
 print("Training time: %fs; Prediction time: %fs" % (time_linear_train, time_linear_predict))
 report = classification_report(test['Label'], prediction_linear, digits=4)
-
-review = """SUPERB, I AM IN LOVE IN THIS PHONE"""
-review_vector = vectorizer.transform([review]) # vectorizing
-print(classifier_linear.predict(review_vector))
-
-review = """Do not purchase this product. My cell phone blast when I switched the charger"""
-review_vector = vectorizer.transform([review]) # vectorizing
-print(classifier_linear.predict(review_vector))
-
-review = """This product doesn't work correctly"""
-review_vector = vectorizer.transform([review]) # vectorizing
-print(classifier_linear.predict(review_vector))
 
 #rcParams['figure.figsize'] = 10,5
 plot_confusion_matrix(prediction_linear,test['Label'])
