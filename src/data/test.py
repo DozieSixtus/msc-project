@@ -2,11 +2,12 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 import pandas as pd
+from sklearn import svm
 
 # Example text data
 dataset = pd.read_csv(r".\data\amazon_electronics_review.csv", sep='\t', index_col=[0])
 dataset.sample(frac=1).head(5) # shuffle the df and pick first 5
-dataset = dataset.iloc[:500]
+dataset = dataset.iloc[:34000]
 dataset['Label'] = dataset['overall'].apply(lambda x: 'negative' if x<=3 else 'positive')
 dataset = dataset.fillna('Null')
 
@@ -27,7 +28,7 @@ model = AutoModel.from_pretrained('huawei-noah/TinyBERT_General_4L_312D')
 
 # Function to get embeddings from BERT
 def get_bert_embeddings(texts):
-    inputs = tokenizer(texts, return_tensors='pt', padding='max_length', max_length=512, truncation=True)
+    inputs = tokenizer(texts, return_tensors='pt', padding='max_length', max_length=128, truncation=True)
     with torch.no_grad():
         outputs = model(**inputs)
     # Get the embeddings from the [CLS] token
@@ -47,7 +48,7 @@ from sklearn.ensemble import RandomForestClassifier
 labels = train['Label']
 
 # Train a classifier using the combined feature vectors
-classifier = RandomForestClassifier(verbose=1)
+classifier = svm.LinearSVC()
 classifier.fit(combined_features, labels)
 
 # Example of making predictions
