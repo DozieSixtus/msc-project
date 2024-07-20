@@ -1,5 +1,6 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report
 import pandas as pd
 
 # Example text data
@@ -17,16 +18,16 @@ tfidf_vectorizer = TfidfVectorizer()
 # Fit and transform the text data to get TF-IDF vectors
 tfidf_vectors = tfidf_vectorizer.fit_transform(train['reviewText']).toarray()
 
-from transformers import AlbertTokenizer, AlbertModel
+from transformers import AlbertTokenizer, AlbertModel, AutoTokenizer, AutoModel
 import torch
 
 # Initialize the tokenizer and model
-tokenizer = AlbertTokenizer.from_pretrained('albert-base-v2')
-model = AlbertModel.from_pretrained('albert-base-v2')
+tokenizer = AutoTokenizer.from_pretrained('huawei-noah/TinyBERT_General_4L_312D')
+model = AutoModel.from_pretrained('huawei-noah/TinyBERT_General_4L_312D')
 
 # Function to get embeddings from BERT
 def get_bert_embeddings(texts):
-    inputs = tokenizer(texts, return_tensors='pt', padding=True, truncation=True)
+    inputs = tokenizer(texts, return_tensors='pt', padding='max_length', max_length=512, truncation=True)
     with torch.no_grad():
         outputs = model(**inputs)
     # Get the embeddings from the [CLS] token
@@ -52,3 +53,11 @@ classifier.fit(combined_features, labels)
 # Example of making predictions
 predictions = classifier.predict(combined_features)
 print(predictions)
+
+test_vectors = tfidf_vectorizer.transform(test['reviewText']).toarray()
+test_bert_embeddings = get_bert_embeddings(test['reviewText'].to_list())
+combined_test_vectors = np.hstack((test_vectors, test_bert_embeddings))
+
+predictions = classifier.predict(combined_test_vectors)
+cr = classification_report(test['Label'], predictions, digits=4)
+print(cr)
