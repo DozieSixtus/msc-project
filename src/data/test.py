@@ -6,12 +6,14 @@ from sklearn import svm
 
 # Example text data
 dataset = pd.read_csv(r".\data\amazon_electronics_review.csv", sep='\t', index_col=[0])
-dataset.sample(frac=1).head(5) # shuffle the df and pick first 5
+dataset.sample(frac=1, random_state=42).head(5) # shuffle the df and pick first 5
 dataset = dataset.iloc[:34000]
-dataset['Label'] = dataset['overall'].apply(lambda x: 'negative' if x<=3 else 'positive')
+dataset['Label'] = dataset['overall'].apply(lambda x: 'negative' if x<3 else 'positive' if x>3 else 'neutral')
+dataset = pd.concat([dataset[dataset['Label']=='negative'][:17000],
+                    dataset[dataset['Label']=='positive'][:17000]], ignore_index=True)
 dataset = dataset.fillna('Null')
 
-train, test = train_test_split(dataset, test_size=0.2, random_state=200)
+train, test = train_test_split(dataset, test_size=0.2, shuffle=True, random_state=42)
 
 # Initialize TF-IDF Vectorizer
 tfidf_vectorizer = TfidfVectorizer()
