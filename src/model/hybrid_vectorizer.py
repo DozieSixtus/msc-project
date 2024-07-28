@@ -36,7 +36,7 @@ model = AutoModel.from_pretrained('huawei-noah/TinyBERT_General_4L_312D')
 
 # Function to get embeddings from BERT
 def get_bert_embeddings(texts):
-    inputs = tokenizer(texts, return_tensors='pt', padding='max_length', max_length=128, truncation=True)
+    inputs = tokenizer(texts, return_tensors='pt', padding='max_length', max_length=64, truncation=True)
     with torch.no_grad():
         outputs = model(**inputs)
     # Get the embeddings from the [CLS] token
@@ -54,7 +54,7 @@ labels = train['Label']
 
 # Train a classifier using the combined feature vectors
 classifier = svm.LinearSVC()
-classifier.fit(combined_features, labels)
+#classifier.fit(combined_features, labels)
 labels = train['Label'].map({'positive': 1, 'negative':0})
 labels = tf.cast(labels, tf.float32)
 classifier = nn_model(combined_features, labels)
@@ -68,7 +68,15 @@ test_bert_embeddings = get_bert_embeddings(test['reviewText'].to_list())
 combined_test_vectors = np.hstack((test_vectors, test_bert_embeddings))
 
 predictions = classifier.predict(combined_test_vectors)
-test['Label'] = test['Label'].map({'positive': 1, 'negative':0})
+#test['Label'] = test['Label'].map({'positive': 1, 'negative':0})
+predictions = np.rint(predictions).tolist()
+predictions = [
+    x
+    for xs in predictions
+    for x in xs
+]
+predictions = pd.Series(predictions).map({1.0: 'positive', 0.0:'negative'})
+print("Neural network ...")
 cr = classification_report(test['Label'], predictions, digits=4)
 print(cr)
 
