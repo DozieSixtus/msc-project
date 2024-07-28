@@ -1,8 +1,16 @@
+import pandas as pd
+import torch
+import numpy as np
+import tensorflow as tf
+
+from transformers import AlbertTokenizer, AlbertModel, AutoTokenizer, AutoModel
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
-import pandas as pd
 from sklearn import svm
+from sklearn.ensemble import RandomForestClassifier
+from nn_model import nn_model
+
 
 # Example text data
 dataset = pd.read_csv(r".\data\amazon_electronics_review.csv", sep='\t', index_col=[0])
@@ -22,9 +30,6 @@ tfidf_vectorizer = TfidfVectorizer()
 # Fit and transform the text data to get TF-IDF vectors
 tfidf_vectors = tfidf_vectorizer.fit_transform(train['reviewText']).toarray()
 
-from transformers import AlbertTokenizer, AlbertModel, AutoTokenizer, AutoModel
-import torch
-
 # Initialize the tokenizer and model
 tokenizer = AutoTokenizer.from_pretrained('huawei-noah/TinyBERT_General_4L_312D')
 model = AutoModel.from_pretrained('huawei-noah/TinyBERT_General_4L_312D')
@@ -40,12 +45,9 @@ def get_bert_embeddings(texts):
 
 # Get BERT embeddings for the text data
 bert_embeddings = get_bert_embeddings(train['reviewText'].to_list())
-import numpy as np
 
 # Concatenate TF-IDF vectors with BERT embeddings
 combined_features = np.hstack((tfidf_vectors, bert_embeddings))
-
-from sklearn.ensemble import RandomForestClassifier
 
 # Example labels for the text data
 labels = train['Label']
@@ -53,6 +55,9 @@ labels = train['Label']
 # Train a classifier using the combined feature vectors
 classifier = svm.LinearSVC()
 classifier.fit(combined_features, labels)
+labels = train['Label'].map({'positive': 1, 'negative':0})
+labels = tf.cast(labels, tf.float32)
+classifier = nn_model(combined_features, labels)
 
 # Example of making predictions
 predictions = classifier.predict(combined_features)
@@ -63,5 +68,7 @@ test_bert_embeddings = get_bert_embeddings(test['reviewText'].to_list())
 combined_test_vectors = np.hstack((test_vectors, test_bert_embeddings))
 
 predictions = classifier.predict(combined_test_vectors)
+test['Label'] = test['Label'].map({'positive': 1, 'negative':0})
 cr = classification_report(test['Label'], predictions, digits=4)
 print(cr)
+
