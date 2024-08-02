@@ -1,0 +1,180 @@
+import pandas as pd
+import numpy as np
+import tensorflow as tf
+import time
+
+from sklearn import svm
+from nn_model import nn_model
+from eval import evaluate_model
+from preprocessing import *
+from vectorizers import *
+from sklearn.model_selection import train_test_split
+
+random_state = 100
+
+# Amazon dataset
+amazon = pd.read_csv(r".\data\amazon_electronics_review.csv", sep='\t', index_col=[0])
+amazon = amazon[~amazon['reviewText'].isna()]
+amazon['Label'] = amazon['overall'].apply(lambda x: 'negative' if x<3 else 'positive' if x>3 else 'neutral')
+
+amazon = pd.concat([amazon[amazon['Label']=='negative'][:17000],
+                    amazon[amazon['Label']=='positive'][:17000]], ignore_index=True)
+
+amazon['reviewText'] = amazon['reviewText'].apply(lambda x: remove_stop_words(x))
+amazon['reviewText'] = amazon['reviewText'].apply(lambda x: deEmojify(x))
+amazon['reviewText'] = amazon['reviewText'].apply(lambda x: stem_words(x))
+amazon.rename(columns={'reviewText': 'Reviews'}, inplace=True)
+amazon = amazon.sample(frac=1, random_state=random_state)
+
+# IMDB dataset
+imdb = pd.read_csv(r".\data\IMDB.csv", sep='\t')
+imdb['Reviews'] = imdb['Reviews'].apply(lambda x: remove_stop_words(x))
+imdb['Reviews'] = imdb['Reviews'].apply(lambda x: deEmojify(x))
+imdb['Reviews'] = imdb['Reviews'].apply(lambda x: stem_words(x))
+imdb = imdb.sample(frac=1, random_state=random_state)
+
+datasets = {'amazon': amazon,
+            'imdb': imdb
+            }
+
+# for each data set run model
+for dataset_name, dataset in datasets.items():
+    print(f"Dataset: {dataset_name}")
+    dataset = dataset.sample(frac=1, random_state=random_state)
+    train, test = train_test_split(dataset, test_size=0.2, random_state=random_state)
+    nn_train_label = train['Label'].map({'positive': 1, 'negative':0})
+    nn_train_label = tf.cast(nn_train_label, tf.float32)
+
+    # TFIDF vectorizer
+    train_vectors, test_vectors = get_tfidf_vectors(train['Reviews'], test['Reviews'])
+    tfidf_train_vectors, tfidf_test_vectors = train_vectors, test_vectors
+
+    # Perform classification with SVM, kernel=linear
+    classifier_linear = svm.SVC(kernel='linear')
+    classifier_linear.fit(train_vectors, train['Label'])
+    prediction_linear = classifier_linear.predict(test_vectors)
+
+    # Evaluate SVM model performance
+    evaluate_model(test['Label'], prediction_linear)
+
+    # Train neural network model
+    model = nn_model(train_vectors, nn_train_label)
+    pred_nn = model.predict(test_vectors)
+    pred_nn = np.rint(pred_nn).tolist()
+    pred_nn = [
+        x
+        for xs in pred_nn
+        for x in xs
+    ]
+    pred_nn = pd.Series(pred_nn).map({1.0: 'positive', 0.0:'negative'})
+    print("Neural network ...")
+
+    # Evaluate NN model performance
+    evaluate_model(test['Label'], pred_nn)
+
+    # Count vectorizer
+    train_vectors, test_vectors = get_count_vectors(train['Reviews'], test['Reviews'])
+
+    # Perform classification with SVM, kernel=linear
+    classifier_linear = svm.SVC(kernel='linear')
+    classifier_linear.fit(train_vectors, train['Label'])
+    prediction_linear = classifier_linear.predict(test_vectors)
+
+    # Evaluate model performance
+    evaluate_model(test['Label'], prediction_linear)
+
+    # Train neural network model
+    model = nn_model(train_vectors, nn_train_label)
+    pred_nn = model.predict(test_vectors)
+    pred_nn = np.rint(pred_nn).tolist()
+    pred_nn = [
+        x
+        for xs in pred_nn
+        for x in xs
+    ]
+    pred_nn = pd.Series(pred_nn).map({1.0: 'positive', 0.0:'negative'})
+    print("Neural network ...")
+
+    # Evaluate NN model performance
+    evaluate_model(test['Label'], pred_nn)
+
+    # Hashing vectorizer
+    train_vectors, test_vectors = get_hashing_vectors(train['Reviews'], test['Reviews'])
+    
+    # Perform classification with SVM, kernel=linear
+    classifier_linear = svm.SVC(kernel='linear')
+    classifier_linear.fit(train_vectors, train['Label'])
+    prediction_linear = classifier_linear.predict(test_vectors)
+
+    # Evaluate model performance
+    evaluate_model(test['Label'], prediction_linear)
+
+    # Train neural network model
+    model = nn_model(train_vectors, nn_train_label)
+    pred_nn = model.predict(test_vectors)
+    pred_nn = np.rint(pred_nn).tolist()
+    pred_nn = [
+        x
+        for xs in pred_nn
+        for x in xs
+    ]
+    pred_nn = pd.Series(pred_nn).map({1.0: 'positive', 0.0:'negative'})
+    print("Neural network ...")
+
+    # Evaluate NN model performance
+    evaluate_model(test['Label'], pred_nn)
+    
+    # Get BERT embeddings for the text data
+    bert_train_vectors = get_bert_embeddings(train['Reviews'].to_list())
+    bert_test_vectors = get_bert_embeddings(test['Reviews'].to_list())
+
+    # Perform classification with SVM, kernel=linear
+    classifier_linear = svm.SVC(kernel='linear')
+    classifier_linear.fit(bert_train_vectors, train['Label'])
+    prediction_linear = classifier_linear.predict(bert_test_vectors)
+
+    # Evaluate model performance
+    evaluate_model(test['Label'], prediction_linear)
+
+    # Train neural network model
+    model = nn_model(bert_train_vectors, nn_train_label)
+    pred_nn = model.predict(bert_test_vectors)
+    pred_nn = np.rint(pred_nn).tolist()
+    pred_nn = [
+        x
+        for xs in pred_nn
+        for x in xs
+    ]
+    pred_nn = pd.Series(pred_nn).map({1.0: 'positive', 0.0:'negative'})
+    print("Neural network ...")
+
+    # Evaluate NN model performance
+    evaluate_model(test['Label'], pred_nn)
+
+    # Get hybrid embeddings
+    # Concatenate TF-IDF vectors with BERT embeddings
+    hybrid_train_embedding = np.hstack((tfidf_train_vectors.toarray(), bert_train_vectors))
+    hybrid_test_embedding = np.hstack((tfidf_test_vectors.toarray(), bert_test_vectors))
+
+    # Perform classification with SVM, kernel=linear
+    classifier_linear = svm.SVC(kernel='linear')
+    classifier_linear.fit(hybrid_train_embedding, train['Label'])
+    prediction_linear = classifier_linear.predict(hybrid_test_embedding)
+
+    # Evaluate model performance
+    evaluate_model(test['Label'], prediction_linear)
+
+    # Train neural network model
+    model = nn_model(hybrid_train_embedding, nn_train_label)
+    pred_nn = model.predict(hybrid_test_embedding)
+    pred_nn = np.rint(pred_nn).tolist()
+    pred_nn = [
+        x
+        for xs in pred_nn
+        for x in xs
+    ]
+    pred_nn = pd.Series(pred_nn).map({1.0: 'positive', 0.0:'negative'})
+    print("Neural network ...")
+
+    # Evaluate NN model performance
+    evaluate_model(test['Label'], pred_nn)

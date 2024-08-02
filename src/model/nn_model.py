@@ -39,5 +39,5 @@ def nn_model(train, labels):
                                     verbose=0, mode='min', start_from_epoch=3, restore_best_weights=True)
 
     model.summary()
-    model.fit(train, labels, batch_size = 16, epochs= 100,callbacks=[es],validation_split=0.2, verbose=2)
+    model.fit(train, labels, batch_size = 16, epochs= 100,callbacks=[es],validation_split=0.2, verbose=0)
     return model
