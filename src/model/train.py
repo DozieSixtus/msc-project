@@ -10,7 +10,7 @@ from preprocessing import *
 from vectorizers import *
 from sklearn.model_selection import train_test_split
 
-random_state = 100
+random_state = 42
 
 # Amazon dataset
 amazon = pd.read_csv(r".\data\amazon_electronics_review.csv", sep='\t', index_col=[0])
@@ -20,18 +20,12 @@ amazon['Label'] = amazon['overall'].apply(lambda x: 'negative' if x<3 else 'posi
 amazon = pd.concat([amazon[amazon['Label']=='negative'][:17000],
                     amazon[amazon['Label']=='positive'][:17000]], ignore_index=True)
 
-amazon['reviewText'] = amazon['reviewText'].apply(lambda x: remove_stop_words(x))
-amazon['reviewText'] = amazon['reviewText'].apply(lambda x: deEmojify(x))
-amazon['reviewText'] = amazon['reviewText'].apply(lambda x: stem_words(x))
 amazon.rename(columns={'reviewText': 'Reviews'}, inplace=True)
-amazon = amazon.sample(frac=1, random_state=random_state)
+#amazon = amazon.sample(frac=1, random_state=random_state)
 
 # IMDB dataset
 imdb = pd.read_csv(r".\data\IMDB.csv", sep='\t')
-imdb['Reviews'] = imdb['Reviews'].apply(lambda x: remove_stop_words(x))
-imdb['Reviews'] = imdb['Reviews'].apply(lambda x: deEmojify(x))
-imdb['Reviews'] = imdb['Reviews'].apply(lambda x: stem_words(x))
-imdb = imdb.sample(frac=1, random_state=random_state)
+#imdb = imdb.sample(frac=1, random_state=random_state)
 
 datasets = {'amazon': amazon,
             'imdb': imdb
@@ -39,8 +33,18 @@ datasets = {'amazon': amazon,
 
 # for each data set run model
 for dataset_name, dataset in datasets.items():
+    print(f"="*50)
     print(f"Dataset: {dataset_name}")
-    dataset = dataset.sample(frac=1, random_state=random_state)
+    print(f"="*50)
+    raw_dataset = dataset.copy()
+    raw_train, raw_test = train_test_split(raw_dataset, test_size=0.2, random_state=random_state)
+
+    # Prep
+    dataset['Reviews'] = dataset['Reviews'].apply(lambda x: remove_stop_words(x))
+    dataset['Reviews'] = dataset['Reviews'].apply(lambda x: deEmojify(x))
+    dataset['Reviews'] = dataset['Reviews'].apply(lambda x: stem_words(x))
+
+    #dataset = dataset.sample(frac=1, random_state=random_state)
     train, test = train_test_split(dataset, test_size=0.2, random_state=random_state)
     nn_train_label = train['Label'].map({'positive': 1, 'negative':0})
     nn_train_label = tf.cast(nn_train_label, tf.float32)
@@ -50,7 +54,7 @@ for dataset_name, dataset in datasets.items():
     tfidf_train_vectors, tfidf_test_vectors = train_vectors, test_vectors
 
     # Perform classification with SVM, kernel=linear
-    classifier_linear = svm.SVC(kernel='linear')
+    classifier_linear = svm.SVC(kernel='linear', random_state=random_state)
     classifier_linear.fit(train_vectors, train['Label'])
     prediction_linear = classifier_linear.predict(test_vectors)
 
@@ -76,7 +80,7 @@ for dataset_name, dataset in datasets.items():
     train_vectors, test_vectors = get_count_vectors(train['Reviews'], test['Reviews'])
 
     # Perform classification with SVM, kernel=linear
-    classifier_linear = svm.SVC(kernel='linear')
+    classifier_linear = svm.SVC(kernel='linear', random_state=random_state)
     classifier_linear.fit(train_vectors, train['Label'])
     prediction_linear = classifier_linear.predict(test_vectors)
 
@@ -102,7 +106,7 @@ for dataset_name, dataset in datasets.items():
     train_vectors, test_vectors = get_hashing_vectors(train['Reviews'], test['Reviews'])
     
     # Perform classification with SVM, kernel=linear
-    classifier_linear = svm.SVC(kernel='linear')
+    classifier_linear = svm.SVC(kernel='linear', random_state=random_state)
     classifier_linear.fit(train_vectors, train['Label'])
     prediction_linear = classifier_linear.predict(test_vectors)
 
@@ -125,11 +129,11 @@ for dataset_name, dataset in datasets.items():
     evaluate_model(test['Label'], pred_nn)
     
     # Get BERT embeddings for the text data
-    bert_train_vectors = get_bert_embeddings(train['Reviews'].to_list())
-    bert_test_vectors = get_bert_embeddings(test['Reviews'].to_list())
+    bert_train_vectors = get_bert_embeddings(raw_train['Reviews'].to_list())
+    bert_test_vectors = get_bert_embeddings(raw_test['Reviews'].to_list())
 
     # Perform classification with SVM, kernel=linear
-    classifier_linear = svm.SVC(kernel='linear')
+    classifier_linear = svm.LinearSVC(random_state=random_state)
     classifier_linear.fit(bert_train_vectors, train['Label'])
     prediction_linear = classifier_linear.predict(bert_test_vectors)
 
@@ -157,7 +161,7 @@ for dataset_name, dataset in datasets.items():
     hybrid_test_embedding = np.hstack((tfidf_test_vectors.toarray(), bert_test_vectors))
 
     # Perform classification with SVM, kernel=linear
-    classifier_linear = svm.SVC(kernel='linear')
+    classifier_linear = svm.LinearSVC(random_state=random_state)
     classifier_linear.fit(hybrid_train_embedding, train['Label'])
     prediction_linear = classifier_linear.predict(hybrid_test_embedding)
 
