@@ -31,7 +31,7 @@ def get_bert_embeddings(texts):
     tokenizer = AutoTokenizer.from_pretrained('huawei-noah/TinyBERT_General_4L_312D')
     model = AutoModel.from_pretrained('huawei-noah/TinyBERT_General_4L_312D')
     
-    inputs = tokenizer(texts, return_tensors='pt', padding='max_length', max_length=64, truncation=True)
+    inputs = tokenizer(texts, return_tensors='pt', padding='max_length', max_length=128, truncation=True)
     with torch.no_grad():
         outputs = model(**inputs)
     # Get the embeddings from the [CLS] token
