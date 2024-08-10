@@ -3,3 +3,6 @@
 
 # data folder
 /data/
+
+# glove embedding
+glove.6B.300d.txt
