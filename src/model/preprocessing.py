@@ -21,5 +21,5 @@ def remove_stop_words(x):
     return text
 
 def stem_words(x):
-    text = ' '.join([stemmer.stem(word) for word in x.split()])
+    text = ' '.join([stemmer.stem(word.lower()) for word in x.split()])
     return text

@@ -3,6 +3,7 @@ import torch
 import numpy as np
 import nltk
 
+from gensim.models import Word2Vec
 from transformers import AlbertTokenizer, AlbertModel, AutoTokenizer, AutoModel
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer, HashingVectorizer
 from nltk.tokenize import word_tokenize
@@ -90,3 +91,19 @@ def get_glove_vectors(text_df, embedding_dim=300):
     # Convert text to GloVe embeddings and prepare data
     text_vectors = np.array([text_to_glove(text, glove_embeddings, embedding_dim) for text in text_df])
     return text_vectors
+
+def get_word2vec_vectors(train, test, vector_size=300):
+    # Train a Word2Vec model
+    word2vec_model = Word2Vec(sentences=train, vector_size=vector_size, window=5, min_count=1, workers=4)
+
+    # Create average Word2Vec vectors for each document
+    def document_vector(tokens, model):
+        vectors = [model.wv[word] for word in tokens if word in model.wv]
+        return np.mean(vectors, axis=0) if vectors else np.zeros(model.vector_size)
+
+    train_vectors = train.apply(lambda x: document_vector(x, word2vec_model))
+    test_vectors = test.apply(lambda x: document_vector(x, word2vec_model))
+
+    train_vectors = np.vstack(train_vectors)
+    test_vectors = np.vstack(test_vectors)
+    return train_vectors, test_vectors

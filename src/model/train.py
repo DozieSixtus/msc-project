@@ -154,6 +154,32 @@ for dataset_name, dataset in datasets.items():
 
     # Evaluate NN model performance
     evaluate_model(test['Label'], pred_nn)
+
+    # word2vec vectorizer
+    train_vectors, test_vectors = get_word2vec_vectors(train['Reviews'], test['Reviews'])
+
+    # Perform classification with SVM, kernel=linear
+    classifier_linear = svm.SVC(kernel='linear', random_state=random_state)
+    classifier_linear.fit(train_vectors, train['Label'])
+    prediction_linear = classifier_linear.predict(test_vectors)
+
+    # Evaluate SVM model performance
+    evaluate_model(test['Label'], prediction_linear)
+
+    # Train neural network model
+    model = nn_model(train_vectors, nn_train_label)
+    pred_nn = model.predict(test_vectors)
+    pred_nn = np.rint(pred_nn).tolist()
+    pred_nn = [
+        x
+        for xs in pred_nn
+        for x in xs
+    ]
+    pred_nn = pd.Series(pred_nn).map({1.0: 'positive', 0.0:'negative'})
+    print("Neural network ...")
+
+    # Evaluate NN model performance
+    evaluate_model(test['Label'], pred_nn)
     
     # Get BERT embeddings for the text data
     bert_train_vectors = get_bert_embeddings(raw_train['Reviews'].to_list())
