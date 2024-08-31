@@ -10,17 +10,11 @@ def load_imdb(path, sentiment_category):
     output = pd.DataFrame()
 
     for file in files:
-        
-        #file_name = os.path.splitext(file)[0]
-
         with open(os.path.join(path, file), 'r', encoding='utf-8') as f:
             info = f.read()
             info = ''.join([x for x in info])
             
-        #print(info)
-                
         df = pd.DataFrame([info], columns=['Reviews'])
-
         output = pd.concat([output, df], axis=0)
 
     if sentiment_category=='pos':

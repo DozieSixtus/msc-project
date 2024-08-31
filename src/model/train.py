@@ -27,8 +27,18 @@ amazon.rename(columns={'reviewText': 'Reviews'}, inplace=True)
 imdb = pd.read_csv(r".\data\IMDB.csv", sep='\t')
 #imdb = imdb.sample(frac=1, random_state=random_state)
 
-datasets = {'amazon': amazon,
-            'imdb': imdb
+# Cherwell dataset
+cherwell = pd.read_csv('.\data\Cherwell.csv', sep='\t')
+cherwell.rename(columns={'sentiment': 'Label', 'Inbound Details (Masked)': 'Reviews'}, inplace=True)
+cherwell = cherwell[cherwell['Label'].isin(['Positive','Negative'])].reset_index(drop=True)
+cherwell['Label'] = cherwell['Label'].apply(lambda x: x.lower())
+#cherwell = cherwell[:200]
+
+
+datasets = {
+            'amazon': amazon,
+            'imdb': imdb,
+            'cherwell': cherwell
             }
 
 # for each data set run model
@@ -48,6 +58,7 @@ for dataset_name, dataset in datasets.items():
     train, test = train_test_split(dataset, test_size=0.2, random_state=random_state)
     nn_train_label = train['Label'].map({'positive': 1, 'negative':0})
     nn_train_label = tf.cast(nn_train_label, tf.float32)
+
 
     # TFIDF vectorizer
     train_vectors, test_vectors = get_tfidf_vectors(train['Reviews'], test['Reviews'])
@@ -76,6 +87,7 @@ for dataset_name, dataset in datasets.items():
     # Evaluate NN model performance
     evaluate_model(test['Label'], pred_nn)
 
+
     # Count vectorizer
     train_vectors, test_vectors = get_count_vectors(train['Reviews'], test['Reviews'])
 
@@ -102,6 +114,7 @@ for dataset_name, dataset in datasets.items():
     # Evaluate NN model performance
     evaluate_model(test['Label'], pred_nn)
 
+
     # Hashing vectorizer
     train_vectors, test_vectors = get_hashing_vectors(train['Reviews'], test['Reviews'])
     
@@ -127,6 +140,7 @@ for dataset_name, dataset in datasets.items():
 
     # Evaluate NN model performance
     evaluate_model(test['Label'], pred_nn)
+
 
     # Glove vectorizer
     train_vectors = get_glove_vectors(train['Reviews'])
@@ -155,6 +169,7 @@ for dataset_name, dataset in datasets.items():
     # Evaluate NN model performance
     evaluate_model(test['Label'], pred_nn)
 
+
     # word2vec vectorizer
     train_vectors, test_vectors = get_word2vec_vectors(train['Reviews'], test['Reviews'])
 
@@ -181,6 +196,7 @@ for dataset_name, dataset in datasets.items():
     # Evaluate NN model performance
     evaluate_model(test['Label'], pred_nn)
     
+
     # Get BERT embeddings for the text data
     bert_train_vectors = get_bert_embeddings(raw_train['Reviews'].to_list())
     bert_test_vectors = get_bert_embeddings(raw_test['Reviews'].to_list())
@@ -207,6 +223,7 @@ for dataset_name, dataset in datasets.items():
 
     # Evaluate NN model performance
     evaluate_model(test['Label'], pred_nn)
+
 
     # Get hybrid embeddings
     # Concatenate TF-IDF vectors with BERT embeddings
