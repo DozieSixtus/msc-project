@@ -74,6 +74,7 @@ for dataset_name, dataset in datasets.items():
 
     # Train neural network model
     model = nn_model(train_vectors, nn_train_label)
+    tf.keras.utils.plot_model(model, "model_architecture.png", show_shapes=True)
     pred_nn = model.predict(test_vectors)
     pred_nn = np.rint(pred_nn).tolist()
     pred_nn = [
